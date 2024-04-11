@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Scanner</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #app {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      z-index: 1;
+    }
+    #camera-stream {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background-color: #000;
+    }
+    #qr-shaded-region {
+      position: absolute;
+      border: 2px solid red;
+      z-index: 2;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <img id="overlay" src="overlay_image.png" alt="Overlay Image">
+    <video id="camera-stream" autoplay playsinline></video>
+     <button id="capture-btn">写真を撮る</button>
+    <div id="qr-shaded-region"></div>
+  </div>
+  <script src="https://rawgit.com/instascan/instascan/master/instascan.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
