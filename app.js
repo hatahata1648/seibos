@@ -1,96 +1,72 @@
-// app.js
-const videoElement = document.getElementById('camera-stream');
-const overlayElement = document.getElementById('overlay');
-const qrShadedRegion = document.getElementById('qr-shaded-region');
-
-// カメラの起動と設定
-navigator.mediaDevices.getUserMedia({ video: {
-        facingMode: 'environment' // この行を追加
-    }
-})
-  .then(stream => {
-    videoElement.srcObject = stream;
-    startQRScanner(videoElement);
-  })
-  .catch(error => {
-    console.error('Error accessing camera:', error);
-  });
-
-// QRコードスキャナーの設定
-function startQRScanner(videoElement) {
-  const scanner = new Instascan.Scanner({ video: videoElement });
-  scanner.addListener('scan', function (content) {
-    console.log('QR Code detected:', content);
-    // QRコードの値を処理する
-    // ...
-  });
-  Instascan.Camera.getCameras()
-    .then(cameras => {
-      if (cameras.length > 0) {
-        scanner.start(cameras[0]);
-        qrShadedRegion.style.display = 'none'; // QRコード検出エリアを非表示
-      } else {
-        console.error('No cameras found.');
-      }
-    })
-    .catch(error => {
-      console.error('Error accessing cameras:', error);
-    });
-}
-// 写真撮影ボタンの設定
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const overlayImage = document.getElementById('overlay-image');
 const captureBtn = document.getElementById('capture-btn');
-captureBtn.addEventListener('click', capturePhoto);
+const previewContainer = document.getElementById('preview-container');
+const capturedImage = document.getElementById('captured-image');
+const closeBtn = document.getElementById('close-btn');
+const downloadLink = document.getElementById('download-link');
+const imageInput = document.getElementById('image-input');
+const shutterSound = document.getElementById('shutter-sound');
 
-// 写真撮影関数
-function capturePhoto() {
-  const canvas = document.createElement('canvas');
-  canvas.width = videoElement.videoWidth;
-  canvas.height = videoElement.videoHeight;
-  canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-  const capturedImageData = canvas.toDataURL('image/png');
-
-  const downloadLink = document.createElement('a');
-  downloadLink.download = 'captured_photo.png';
-  downloadLink.href = capturedImageData;
-  downloadLink.click();
-}
-// QRコード検出エリアの更新
-function updateQRShadedRegion(box) {
-  if (box) {
-    qrShadedRegion.style.display = 'block';
-    qrShadedRegion.style.left = `${box.x}px`;
-    qrShadedRegion.style.top = `${box.y}px`;
-    qrShadedRegion.style.width = `${box.width}px`;
-    qrShadedRegion.style.height = `${box.height}px`;
-  } else {
-    qrShadedRegion.style.display = 'none';
+// カメラの初期化
+const constraints = {
+  video: {
+    facingMode: 'environment'
   }
-}
+};
 
-// カメラのストリームを停止
-function stopCameraStream() {
-  const stream = videoElement.srcObject;
-  if (stream) {
-    const tracks = stream.getTracks();
-    tracks.forEach(track => track.stop());
-    videoElement.srcObject = null;
+navigator.mediaDevices.getUserMedia(constraints)
+  .then(stream => {
+    video.srcObject = stream;
+    video.play();
+  })
+  .catch(err => console.error(err));
+
+// 写真の撮影と保存
+captureBtn.addEventListener('click', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  if (overlayImage.src) {
+    ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
   }
-}
 
-// 写真撮影
-function capturePhoto() {
-  const canvas = document.createElement('canvas');
-  canvas.width = videoElement.videoWidth;
-  canvas.height = videoElement.videoHeight;
-  canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-  const capturedImageData = canvas.toDataURL('image/png');
+  const dataURL = canvas.toDataURL('image/png');
+  capturedImage.src = dataURL;
+  previewContainer.style.display = 'flex'; // プレビューコンテナを表示
 
-  // 撮影した写真の処理
-  console.log('Captured Photo:', capturedImageData);
+  downloadLink.href = dataURL;
+  downloadLink.style.display = 'block';
 
-  // 例: 写真をリンクとしてダウンロードさせる
-  const downloadLink = document.createElement('a');
-  downloadLink.download = 'captured_photo.png';
-  downloadLink.href = capturedImageData;
-  downloadLink.click();
-}
+  shutterSound.play();
+  const previewOverlay = document.getElementById('preview-overlay');
+  previewOverlay.style.animation = 'none';
+  requestAnimationFrame(() => {
+    previewOverlay.style.animation = null;
+  });
+  requestAnimationFrame(() => {
+    previewOverlay.style.animation = 'flash 0.5s ease-out';
+  });
+});
+
+// プレビューを閉じる
+closeBtn.addEventListener('click', () => {
+  previewContainer.style.display = 'none'; // プレビューコンテナを非表示
+});
+
+// 画像のオーバーレイ
+imageInput.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    overlayImage.src = reader.result;
+  };
+
+  if (file) {
+    reader.readAsDataURL(file);
+  }
+});
