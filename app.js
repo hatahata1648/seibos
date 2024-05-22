@@ -8,7 +8,6 @@ const closeBtn = document.getElementById('close-btn');
 const downloadLink = document.getElementById('download-link');
 const imageInput = document.getElementById('image-input');
 const shutterSound = document.getElementById('shutter-sound');
-const overlaySizeSlider = document.getElementById('overlay-size-slider');
 const overlay = document.getElementById('overlay');
 
 let initialPinchDistance = 0;
@@ -39,7 +38,7 @@ captureBtn.addEventListener('click', () => {
   ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
   
   if (overlayImage.src) {
-    const size = overlaySizeSlider.value;
+    const size = initialSize;
     const imageWidth = canvasWidth * size;
     const imageHeight = canvasHeight * size;
     const offsetX = (canvasWidth - imageWidth) / 2;
@@ -81,27 +80,22 @@ imageInput.addEventListener('change', (event) => {
   }
 });
 
-// オーバーレイ画像のサイズ変更（スライダー）
-overlaySizeSlider.addEventListener('input', () => {
-  const size = overlaySizeSlider.value;
-  overlayImage.style.transform = `scale(${size})`;
-});
-
 // ピンチジェスチャーの開始
 overlay.addEventListener('touchstart', (event) => {
+  event.preventDefault();
   if (event.touches.length === 2) {
     initialPinchDistance = getDistance(event.touches[0], event.touches[1]);
-    initialSize = parseFloat(overlaySizeSlider.value);
+    initialSize = parseFloat(overlayImage.style.transform.replace('scale(', '').replace(')', '')) || 1;
   }
 });
 
 // ピンチジェスチャーの移動
 overlay.addEventListener('touchmove', (event) => {
+  event.preventDefault();
   if (event.touches.length === 2) {
     const currentPinchDistance = getDistance(event.touches[0], event.touches[1]);
     const sizeDelta = currentPinchDistance / initialPinchDistance;
     const newSize = initialSize * sizeDelta;
-    overlaySizeSlider.value = newSize;
     overlayImage.style.transform = `scale(${newSize})`;
   }
 });
@@ -109,7 +103,7 @@ overlay.addEventListener('touchmove', (event) => {
 // ピンチジェスチャーの終了
 overlay.addEventListener('touchend', () => {
   initialPinchDistance = 0;
-  initialSize = 1;
+  initialSize = parseFloat(overlayImage.style.transform.replace('scale(', '').replace(')', '')) || 1;
 });
 
 // 2点間の距離を計算する関数
