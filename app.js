@@ -1,5 +1,15 @@
+const video = document.querySelector("#videoElement");
 const overlay = document.getElementById('overlayImage');
 let scale = 1;
+
+// カメラアクセス
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function(stream) {
+        video.srcObject = stream;
+    })
+    .catch(function(error) {
+        console.log("Something went wrong!");
+    });
 
 document.getElementById('zoomIn').addEventListener('click', () => {
     scale *= 1.1;
@@ -11,7 +21,6 @@ document.getElementById('zoomOut').addEventListener('click', () => {
     overlay.style.transform = `scale(${scale})`;
 });
 
-// 撮影機能はそのまま使用可能
 document.getElementById('capture').addEventListener('click', () => {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
