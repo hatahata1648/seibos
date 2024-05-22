@@ -8,6 +8,7 @@ const closeBtn = document.getElementById('close-btn');
 const downloadLink = document.getElementById('download-link');
 const imageInput = document.getElementById('image-input');
 const shutterSound = document.getElementById('shutter-sound');
+const overlaySizeSlider = document.getElementById('overlay-size-slider');
 
 // カメラの初期化
 const constraints = {
@@ -28,23 +29,27 @@ captureBtn.addEventListener('click', () => {
   const videoRatio = video.videoWidth / video.videoHeight;
   const canvasWidth = video.videoWidth;
   const canvasHeight = canvasWidth / videoRatio;
-
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
-
+  
   if (overlayImage.src) {
-    ctx.drawImage(overlayImage, 0, 0, canvasWidth, canvasHeight);
+    const size = overlaySizeSlider.value;
+    const imageWidth = canvasWidth * size;
+    const imageHeight = canvasHeight * size;
+    const offsetX = (canvasWidth - imageWidth) / 2;
+    const offsetY = (canvasHeight - imageHeight) / 2;
+    ctx.drawImage(overlayImage, offsetX, offsetY, imageWidth, imageHeight);
   }
-
+  
   const dataURL = canvas.toDataURL('image/png');
   capturedImage.src = dataURL;
   previewContainer.style.display = 'flex';
   downloadLink.href = dataURL;
   downloadLink.style.display = 'block';
-
   shutterSound.play();
+  
   const previewOverlay = document.getElementById('preview-overlay');
   previewOverlay.style.animation = 'none';
   requestAnimationFrame(() => {
@@ -64,12 +69,16 @@ closeBtn.addEventListener('click', () => {
 imageInput.addEventListener('change', (event) => {
   const file = event.target.files[0];
   const reader = new FileReader();
-
   reader.onload = () => {
     overlayImage.src = reader.result;
   };
-
   if (file) {
     reader.readAsDataURL(file);
   }
+});
+
+// オーバーレイ画像のサイズ変更
+overlaySizeSlider.addEventListener('input', () => {
+  const size = overlaySizeSlider.value;
+  overlayImage.style.transform = `scale(${size})`;
 });
