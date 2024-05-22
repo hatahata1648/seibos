@@ -11,7 +11,7 @@ const shutterSound = document.getElementById('shutter-sound');
 const overlay = document.getElementById('overlay');
 
 let initialPinchDistance = 0;
-let initialSize = 1;
+let initialScale = 1;
 
 // カメラの初期化
 const constraints = {
@@ -38,9 +38,8 @@ captureBtn.addEventListener('click', () => {
   ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
   
   if (overlayImage.src) {
-    const size = initialSize;
-    const imageWidth = canvasWidth * size;
-    const imageHeight = canvasHeight * size;
+    const imageWidth = overlayImage.width * initialScale;
+    const imageHeight = overlayImage.height * initialScale;
     const offsetX = (canvasWidth - imageWidth) / 2;
     const offsetY = (canvasHeight - imageHeight) / 2;
     ctx.drawImage(overlayImage, offsetX, offsetY, imageWidth, imageHeight);
@@ -74,6 +73,8 @@ imageInput.addEventListener('change', (event) => {
   const reader = new FileReader();
   reader.onload = () => {
     overlayImage.src = reader.result;
+    initialScale = 1;
+    overlayImage.style.transform = 'scale(1)';
   };
   if (file) {
     reader.readAsDataURL(file);
@@ -82,33 +83,5 @@ imageInput.addEventListener('change', (event) => {
 
 // ピンチジェスチャーの開始
 overlay.addEventListener('touchstart', (event) => {
-  event.preventDefault();
   if (event.touches.length === 2) {
-    initialPinchDistance = getDistance(event.touches[0], event.touches[1]);
-    initialSize = parseFloat(overlayImage.style.transform.replace('scale(', '').replace(')', '')) || 1;
-  }
-});
-
-// ピンチジェスチャーの移動
-overlay.addEventListener('touchmove', (event) => {
-  event.preventDefault();
-  if (event.touches.length === 2) {
-    const currentPinchDistance = getDistance(event.touches[0], event.touches[1]);
-    const sizeDelta = currentPinchDistance / initialPinchDistance;
-    const newSize = initialSize * sizeDelta;
-    overlayImage.style.transform = `scale(${newSize})`;
-  }
-});
-
-// ピンチジェスチャーの終了
-overlay.addEventListener('touchend', () => {
-  initialPinchDistance = 0;
-  initialSize = parseFloat(overlayImage.style.transform.replace('scale(', '').replace(')', '')) || 1;
-});
-
-// 2点間の距離を計算する関数
-function getDistance(touch1, touch2) {
-  const dx = touch1.clientX - touch2.clientX;
-  const dy = touch1.clientY - touch2.clientY;
-  return Math.sqrt(dx * dx + dy * dy);
-}
+    initialPinchDistance = getDistance(event.touches[0], ev
