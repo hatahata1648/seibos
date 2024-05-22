@@ -9,6 +9,10 @@ const downloadLink = document.getElementById('download-link');
 const imageInput = document.getElementById('image-input');
 const shutterSound = document.getElementById('shutter-sound');
 const overlaySizeSlider = document.getElementById('overlay-size-slider');
+const overlay = document.getElementById('overlay');
+
+let initialPinchDistance = 0;
+let initialSize = 1;
 
 // カメラの初期化
 const constraints = {
@@ -77,8 +81,40 @@ imageInput.addEventListener('change', (event) => {
   }
 });
 
-// オーバーレイ画像のサイズ変更
+// オーバーレイ画像のサイズ変更（スライダー）
 overlaySizeSlider.addEventListener('input', () => {
   const size = overlaySizeSlider.value;
   overlayImage.style.transform = `scale(${size})`;
 });
+
+// ピンチジェスチャーの開始
+overlay.addEventListener('touchstart', (event) => {
+  if (event.touches.length === 2) {
+    initialPinchDistance = getDistance(event.touches[0], event.touches[1]);
+    initialSize = parseFloat(overlaySizeSlider.value);
+  }
+});
+
+// ピンチジェスチャーの移動
+overlay.addEventListener('touchmove', (event) => {
+  if (event.touches.length === 2) {
+    const currentPinchDistance = getDistance(event.touches[0], event.touches[1]);
+    const sizeDelta = currentPinchDistance / initialPinchDistance;
+    const newSize = initialSize * sizeDelta;
+    overlaySizeSlider.value = newSize;
+    overlayImage.style.transform = `scale(${newSize})`;
+  }
+});
+
+// ピンチジェスチャーの終了
+overlay.addEventListener('touchend', () => {
+  initialPinchDistance = 0;
+  initialSize = 1;
+});
+
+// 2点間の距離を計算する関数
+function getDistance(touch1, touch2) {
+  const dx = touch1.clientX - touch2.clientX;
+  const dy = touch1.clientY - touch2.clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
